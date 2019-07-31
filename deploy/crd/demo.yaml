@@ -1,0 +1,12 @@
+apiVersion: storage.io/v1alpha1
+kind: HdfsCluster
+metadata:
+  name: demo
+spec:
+  name_node:
+    storage: 10Gi
+    storage_class: local-storage
+  data_node:
+    storage: 10Gi
+    storage_class: local-storage
+    replicas: 5
