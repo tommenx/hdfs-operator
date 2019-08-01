@@ -35,6 +35,20 @@ func NameNodeDeployment(clusterName string) string {
 	return fmt.Sprintf("%s-namenode", clusterName)
 }
 
+func DataNodeServiceName(clusterName string) string {
+	return fmt.Sprintf("%s-dn", clusterName)
+}
+
+func DataNodeSetName(clusterName string) string {
+	return fmt.Sprintf("%s-datanode")
+}
+
+func DataNodeLabel() map[string]string {
+	labels := make(map[string]string)
+	labels["app"] = "datanode"
+	return labels
+}
+
 func NameNodeLabel() map[string]string {
 	label := make(map[string]string)
 	label["app"] = "namenode"

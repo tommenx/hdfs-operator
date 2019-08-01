@@ -25,7 +25,7 @@ func NewRealDeploymentControl(kubeCli kubernetes.Interface) DeploymentControlInt
 func (c *realDeploymentControl) CreateDeployment(hc *v1alpha1.HdfsCluster, deployment *apps.Deployment) error {
 	_, err := c.kubeCli.AppsV1().Deployments(hc.Namespace).Create(deployment)
 	if err != nil {
-		glog.Errorf("create StatefulSet(error, err=%+v", err)
+		glog.Errorf("create deployment error, err=%+v", err)
 		return err
 	}
 	return nil

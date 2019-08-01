@@ -54,7 +54,7 @@ func NewController(
 	hcInformer := informerFactory.Storage().V1alpha1().HdfsClusters()
 	setInformer := kubeInformerFactory.Apps().V1().StatefulSets()
 
-	//setControl := controller.NewRealStatefulSetControl(kubeCli)
+	setControl := controller.NewRealStatefulSetControl(kubeCli)
 	svcControl := controller.NewRealServiceControl(kubeCli)
 	pvcControl := controller.NewRealPVCControl(kubeCli)
 	deployControl := controller.NewRealDeploymentControl(kubeCli)
@@ -64,7 +64,7 @@ func NewController(
 		kubeClient: kubeCli,
 		control: NewHdfsClusterControl(
 			manager.NewNameNodeManager(deployControl, pvcControl, podControl, svcControl),
-			manager.NewDataNodeManager(),
+			manager.NewDataNodeManager(setControl, svcControl, manager.NewDataNodeScaler()),
 		),
 		queue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	}

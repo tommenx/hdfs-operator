@@ -11,7 +11,11 @@ import (
 type dataNodeScaler struct {
 }
 
-func ScaleOut(hc v1alpha1.HdfsCluster, oldSet *apps.StatefulSet, newSet *apps.StatefulSet) error {
+func NewDataNodeScaler() Scaler {
+	return &dataNodeScaler{}
+}
+
+func (d *dataNodeScaler) ScaleOut(hc v1alpha1.HdfsCluster, oldSet *apps.StatefulSet, newSet *apps.StatefulSet) error {
 	ns := hc.GetNamespace()
 	tcName := hc.GetName()
 	glog.Infof("start scale %s/%s", ns, tcName)

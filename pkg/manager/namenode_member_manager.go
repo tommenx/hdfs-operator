@@ -89,7 +89,7 @@ func (nnm *nameNodeManager) SyncNameNodeDeployment(hc *v1alpha1.HdfsCluster) err
 	deployment := nnm.getNameNodeDeployment(hc)
 	err := nnm.deploymentControl.CreateDeployment(hc, deployment)
 	if err != nil {
-		glog.Errorf("create name node deployment error, err=$+v", err)
+		glog.Errorf("create name node deployment error, err=%+v", err)
 		return err
 	}
 	glog.Infof("create name node deployment success")
@@ -135,6 +135,7 @@ func (nnm *nameNodeManager) getNameNodePVC(hc *v1alpha1.HdfsCluster) *corev1.Per
 	sz := hc.Spec.NameNode.Storage
 	var q resource.Quantity
 	q, _ = resource.ParseQuantity(sz)
+	sc := hc.Spec.NameNode.StorageClass
 	return &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            pvcName,
@@ -146,6 +147,7 @@ func (nnm *nameNodeManager) getNameNodePVC(hc *v1alpha1.HdfsCluster) *corev1.Per
 			AccessModes: []corev1.PersistentVolumeAccessMode{
 				corev1.ReadWriteOnce,
 			},
+			StorageClassName: &sc,
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
 					corev1.ResourceStorage: q,
@@ -169,6 +171,9 @@ func (nnm *nameNodeManager) getNameNodeDeployment(hc *v1alpha1.HdfsCluster) *app
 		},
 		Spec: apps.DeploymentSpec{
 			Replicas: &replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: controller.NameNodeLabel(),
+			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: controller.NameNodeLabel(),

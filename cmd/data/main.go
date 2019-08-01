@@ -21,20 +21,22 @@ func main() {
 	podInformer := informerFactory.Core().V1().Pods()
 	go informerFactory.Start(stopCh)
 	svcControl := controller.NewRealServiceControl(kubeCli)
-	pvcControl := controller.NewRealPVCControl(kubeCli)
-	deployControl := controller.NewRealDeploymentControl(kubeCli)
-	podControl := controller.NewRealPodControl(kubeCli, podInformer.Lister())
+	//pvcControl := controller.NewRealPVCControl(kubeCli)
+	setControl := controller.NewRealStatefulSetControl(kubeCli)
+	//deployControl := controller.NewRealDeploymentControl(kubeCli)
+	//podControl := controller.NewRealPodControl(kubeCli, podInformer.Lister())
 	if !cache.WaitForCacheSync(stopCh, podInformer.Informer().HasSynced) {
 		return
 	}
 	hdfsControl := hdfscluster.NewHdfsController(cli)
-	namenode := manager.NewNameNodeManager(deployControl, pvcControl, podControl, svcControl)
+	//namenode := manager.NewNameNodeManager(deployControl, pvcControl, podControl, svcControl)
+	datanode := manager.NewDataNodeManager(setControl, svcControl, manager.NewDataNodeScaler())
 	hc, err := hdfsControl.Get()
 	if err != nil {
 		glog.Errorf("get hdfs cluster error,err=%+v", err)
 		panic(err)
 	}
-	err = namenode.Sync(hc)
+	err = datanode.Sync(hc)
 	if err != nil {
 		glog.Errorf("sync name node error")
 	}
