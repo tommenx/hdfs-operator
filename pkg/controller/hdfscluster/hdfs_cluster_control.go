@@ -1,7 +1,6 @@
 package hdfscluster
 
 import (
-	"errors"
 	"github.com/golang/glog"
 	"github.com/tommenx/hdfs-operator/pkg/apis/storage.io/v1alpha1"
 	"github.com/tommenx/hdfs-operator/pkg/manager"
@@ -42,10 +41,10 @@ func (c *hdfsClusterControl) updateHdfsCluster(cluster *v1alpha1.HdfsCluster) er
 		glog.Errorf("sync name node error")
 		return err
 	}
-	if !c.isNameNodeAvailable() {
-		glog.Error("name node service is not available")
-		return errors.New("name node is not available")
-	}
+	//if !c.isNameNodeAvailable() {
+	//	glog.Error("name node service is not available")
+	//	return errors.New("name node is not available")
+	//}
 	return nil
 }
 

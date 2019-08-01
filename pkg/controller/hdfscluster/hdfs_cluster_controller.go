@@ -2,6 +2,7 @@ package hdfscluster
 
 import (
 	"github.com/golang/glog"
+	v1alpha1 "github.com/tommenx/hdfs-operator/pkg/apis/storage.io/v1alpha1"
 	"github.com/tommenx/hdfs-operator/pkg/client/clientset/versioned"
 	informers "github.com/tommenx/hdfs-operator/pkg/client/informers/externalversions"
 	listers "github.com/tommenx/hdfs-operator/pkg/client/listers/storage.io/v1alpha1"
@@ -34,13 +35,13 @@ func NewHdfsController(cli versioned.Interface) *HdfsController {
 	return &HdfsController{cli: cli}
 }
 
-func (h *HdfsController) Get() {
-	hdfs, err := h.cli.Storage().HdfsClusters("default").Get("demo", metav1.GetOptions{})
+func (h *HdfsController) Get() (*v1alpha1.HdfsCluster, error) {
+	hdfs, err := h.cli.StorageV1alpha1().HdfsClusters("default").Get("demo", metav1.GetOptions{})
 	if err != nil {
 		glog.Errorf("get hdfs cluster error")
-		return
+		return nil, err
 	}
-	glog.Errorf("hdfs is %+v", *hdfs)
+	return hdfs, nil
 }
 
 func NewController(
