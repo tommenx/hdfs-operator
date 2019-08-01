@@ -70,7 +70,7 @@ func (nnm *nameNodeManager) SyncNameNodeService(hc *v1alpha1.HdfsCluster) error 
 			glog.Errorf("sync name node service error, err=%+v", err)
 			return err
 		}
-	} else {
+	} else if err != nil {
 		glog.Errorf("get name node service failed, err=%+v", err)
 		return err
 	}
@@ -88,11 +88,11 @@ func (nnm *nameNodeManager) SyncNameNodePVC(hc *v1alpha1.HdfsCluster) error {
 			glog.Errorf("create name node pvc error, err=%+v", err)
 			return err
 		}
-	} else {
+	} else if err != nil {
 		glog.Errorf("create pvc error, err=%+v", err)
 		return err
 	}
-	glog.Infof("create name node pvc success")
+	glog.Infof("sync name node pvc success")
 	return nil
 }
 
@@ -106,11 +106,11 @@ func (nnm *nameNodeManager) SyncNameNodeDeployment(hc *v1alpha1.HdfsCluster) err
 			glog.Errorf("create name node deployment error, err=%+v", err)
 			return err
 		}
-	} else {
+	} else if err != nil {
 		glog.Errorf("get deployment error, err=%+v", err)
 		return err
 	}
-	glog.Infof("create name node deployment success")
+	glog.Infof("sync name node deployment success")
 	return nil
 }
 

@@ -45,6 +45,10 @@ func (c *hdfsClusterControl) updateHdfsCluster(cluster *v1alpha1.HdfsCluster) er
 	//	glog.Error("name node service is not available")
 	//	return errors.New("name node is not available")
 	//}
+	if err := c.dataNodeManager.Sync(cluster); err != nil {
+		glog.Errorf("sync data node error")
+		return err
+	}
 	return nil
 }
 

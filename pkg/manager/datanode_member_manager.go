@@ -53,7 +53,7 @@ func (dnm *dataNodeManager) SyncDatanodeHeadlessService(hc *v1alpha1.HdfsCluster
 			glog.Errorf("sync data node service, err=%+v", err)
 			return err
 		}
-	} else {
+	} else if err != nil {
 		glog.Errorf("get data node service error,err=%+v", err)
 		return err
 	}
@@ -71,7 +71,7 @@ func (dnm *dataNodeManager) SyncDatanodeStatefulSet(hc *v1alpha1.HdfsCluster) er
 			glog.Errorf("sync data node statefulset, err=%+v", err)
 			return err
 		}
-	} else {
+	} else if err != nil {
 		glog.Errorf("get data node statefulset error, err=%+v", err)
 		return err
 	}

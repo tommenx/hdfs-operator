@@ -23,12 +23,11 @@ func main() {
 	deployInformer := informerFactory.Apps().V1().Deployments()
 	pvcInformer := informerFactory.Core().V1().PersistentVolumeClaims()
 	go informerFactory.Start(stopCh)
-
 	svcControl := controller.NewRealServiceControl(kubeCli, svcInformer.Lister())
 	pvcControl := controller.NewRealPVCControl(kubeCli, pvcInformer.Lister())
 	deployControl := controller.NewRealDeploymentControl(kubeCli, deployInformer.Lister())
 	podControl := controller.NewRealPodControl(kubeCli, podInformer.Lister())
-	if !cache.WaitForCacheSync(stopCh, podInformer.Informer().HasSynced) {
+	if !cache.WaitForCacheSync(stopCh, podInformer.Informer().HasSynced, svcInformer.Informer().HasSynced) {
 		return
 	}
 	hdfsControl := hdfscluster.NewHdfsController(cli)
