@@ -5,21 +5,25 @@ import (
 	"github.com/tommenx/hdfs-operator/pkg/apis/storage.io/v1alpha1"
 	apps "k8s.io/api/apps/v1"
 	"k8s.io/client-go/kubernetes"
+	appslisters "k8s.io/client-go/listers/apps/v1"
 )
 
 type StatefulSetControlInterface interface {
 	CreateStatefulSet(*v1alpha1.HdfsCluster, *apps.StatefulSet) error
+	GetStatefulSet(hc *v1alpha1.HdfsCluster, name string) (*apps.StatefulSet, error)
 	UpdateStatefulSet(*v1alpha1.HdfsCluster, *apps.StatefulSet) (*apps.StatefulSet, error)
 }
 
 type realStatefulSetControl struct {
-	kubeCli kubernetes.Interface
+	kubeCli    kubernetes.Interface
+	setListers appslisters.StatefulSetLister
 }
 
 // NewRealServiceControl creates a new ServiceControlInterface
-func NewRealStatefulSetControl(kubeCli kubernetes.Interface) StatefulSetControlInterface {
+func NewRealStatefulSetControl(kubeCli kubernetes.Interface, setListers appslisters.StatefulSetLister) StatefulSetControlInterface {
 	return &realStatefulSetControl{
 		kubeCli,
+		setListers,
 	}
 }
 
@@ -30,6 +34,11 @@ func (c *realStatefulSetControl) CreateStatefulSet(hc *v1alpha1.HdfsCluster, sta
 		return err
 	}
 	return nil
+}
+
+func (c *realStatefulSetControl) GetStatefulSet(hc *v1alpha1.HdfsCluster, name string) (*apps.StatefulSet, error) {
+	set, err := c.setListers.StatefulSets(hc.Namespace).Get(name)
+	return set, err
 }
 
 func (c *realStatefulSetControl) UpdateStatefulSet(hc *v1alpha1.HdfsCluster, ss *apps.StatefulSet) (*apps.StatefulSet, error) {

@@ -6,6 +6,7 @@ import (
 	"github.com/tommenx/hdfs-operator/pkg/controller"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -59,26 +60,36 @@ func (nnm *nameNodeManager) CheckStatus() bool {
 	return true
 }
 
-//TODO
-// 最好需要判断集群中是否已经存在了namenode service
 func (nnm *nameNodeManager) SyncNameNodeService(hc *v1alpha1.HdfsCluster) error {
-	svc := nnm.getNameNodeService(hc)
-	err := nnm.svcControl.CreateService(hc, svc)
-	if err != nil {
-		glog.Errorf("sync name node service, err=%+v", err)
+	svcName := controller.NameNodeServiceName(hc.Name)
+	_, err := nnm.svcControl.GetService(hc, svcName)
+	if err != nil && errors.IsNotFound(err) {
+		svc := nnm.getNameNodeService(hc)
+		err := nnm.svcControl.CreateService(hc, svc)
+		if err != nil {
+			glog.Errorf("sync name node service error, err=%+v", err)
+			return err
+		}
+	} else {
+		glog.Errorf("get name node service failed, err=%+v", err)
 		return err
 	}
 	glog.Infof("sync name node service success")
 	return nil
 }
 
-//TODO
-// 最好判断集群中手否存在了namenode pvc
 func (nnm *nameNodeManager) SyncNameNodePVC(hc *v1alpha1.HdfsCluster) error {
-	pvc := nnm.getNameNodePVC(hc)
-	err := nnm.pvcControl.CreatePVC(hc, pvc)
-	if err != nil {
-		glog.Errorf("create name node pvc error, err=%+v", err)
+	pvcName := controller.NameNodePVCName(hc.Name)
+	_, err := nnm.pvcControl.GetPVC(hc, pvcName)
+	if err != nil && errors.IsNotFound(err) {
+		pvc := nnm.getNameNodePVC(hc)
+		err := nnm.pvcControl.CreatePVC(hc, pvc)
+		if err != nil {
+			glog.Errorf("create name node pvc error, err=%+v", err)
+			return err
+		}
+	} else {
+		glog.Errorf("create pvc error, err=%+v", err)
 		return err
 	}
 	glog.Infof("create name node pvc success")
@@ -86,10 +97,17 @@ func (nnm *nameNodeManager) SyncNameNodePVC(hc *v1alpha1.HdfsCluster) error {
 }
 
 func (nnm *nameNodeManager) SyncNameNodeDeployment(hc *v1alpha1.HdfsCluster) error {
-	deployment := nnm.getNameNodeDeployment(hc)
-	err := nnm.deploymentControl.CreateDeployment(hc, deployment)
-	if err != nil {
-		glog.Errorf("create name node deployment error, err=%+v", err)
+	deploymentName := controller.NameNodeDeployment(hc.Name)
+	_, err := nnm.deploymentControl.GetDeployment(hc, deploymentName)
+	if err != nil && errors.IsNotFound(err) {
+		deployment := nnm.getNameNodeDeployment(hc)
+		err := nnm.deploymentControl.CreateDeployment(hc, deployment)
+		if err != nil {
+			glog.Errorf("create name node deployment error, err=%+v", err)
+			return err
+		}
+	} else {
+		glog.Errorf("get deployment error, err=%+v", err)
 		return err
 	}
 	glog.Infof("create name node deployment success")

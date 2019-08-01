@@ -24,7 +24,7 @@ func GetOwnerRef(tc *v1alpha1.HdfsCluster) metav1.OwnerReference {
 }
 
 func NameNodeServiceName(clusterName string) string {
-	return fmt.Sprintf("%s-nn", clusterName)
+	return fmt.Sprintf("%snn", clusterName)
 }
 
 func NameNodePVCName(clusterName string) string {
@@ -36,11 +36,11 @@ func NameNodeDeployment(clusterName string) string {
 }
 
 func DataNodeServiceName(clusterName string) string {
-	return fmt.Sprintf("%s-dn", clusterName)
+	return fmt.Sprintf("%sdn", clusterName)
 }
 
 func DataNodeSetName(clusterName string) string {
-	return fmt.Sprintf("%s-datanode")
+	return fmt.Sprintf("%s-datanode", clusterName)
 }
 
 func DataNodeLabel() map[string]string {

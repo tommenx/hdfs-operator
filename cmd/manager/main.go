@@ -19,10 +19,14 @@ func main() {
 	cli, _ := controller.NewSLCliAndInformerFactory(path)
 	stopCh := make(chan struct{})
 	podInformer := informerFactory.Core().V1().Pods()
+	svcInformer := informerFactory.Core().V1().Services()
+	deployInformer := informerFactory.Apps().V1().Deployments()
+	pvcInformer := informerFactory.Core().V1().PersistentVolumeClaims()
 	go informerFactory.Start(stopCh)
-	svcControl := controller.NewRealServiceControl(kubeCli)
-	pvcControl := controller.NewRealPVCControl(kubeCli)
-	deployControl := controller.NewRealDeploymentControl(kubeCli)
+
+	svcControl := controller.NewRealServiceControl(kubeCli, svcInformer.Lister())
+	pvcControl := controller.NewRealPVCControl(kubeCli, pvcInformer.Lister())
+	deployControl := controller.NewRealDeploymentControl(kubeCli, deployInformer.Lister())
 	podControl := controller.NewRealPodControl(kubeCli, podInformer.Lister())
 	if !cache.WaitForCacheSync(stopCh, podInformer.Informer().HasSynced) {
 		return

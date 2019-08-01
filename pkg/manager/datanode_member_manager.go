@@ -7,6 +7,7 @@ import (
 	"github.com/tommenx/hdfs-operator/pkg/controller"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -42,26 +43,49 @@ func (dnm *dataNodeManager) Sync(hc *v1alpha1.HdfsCluster) error {
 	return nil
 }
 
-//TODO
-// 检查是否已经存在
 func (dnm *dataNodeManager) SyncDatanodeHeadlessService(hc *v1alpha1.HdfsCluster) error {
-	svc := dnm.getDatanodeHeadlessService(hc)
-	err := dnm.svcControl.CreateService(hc, svc)
-	if err != nil {
-		glog.Errorf("sync data node service, err=%+v", err)
+	svcName := controller.DataNodeServiceName(hc.Name)
+	_, err := dnm.svcControl.GetService(hc, svcName)
+	if err != nil && errors.IsNotFound(err) {
+		svc := dnm.getDatanodeHeadlessService(hc)
+		err := dnm.svcControl.CreateService(hc, svc)
+		if err != nil {
+			glog.Errorf("sync data node service, err=%+v", err)
+			return err
+		}
+	} else {
+		glog.Errorf("get data node service error,err=%+v", err)
 		return err
 	}
 	glog.Infof("sync data node  service success")
 	return nil
 }
 
-//TODO
-// 检查是否已经存在
 func (dnm *dataNodeManager) SyncDatanodeStatefulSet(hc *v1alpha1.HdfsCluster) error {
-	set := dnm.getDatanodeStatefulset(hc)
-	err := dnm.setControl.CreateStatefulSet(hc, set)
+	setName := controller.DataNodeSetName(hc.Name)
+	oldSet, err := dnm.setControl.GetStatefulSet(hc, setName)
+	if err != nil && errors.IsNotFound(err) {
+		set := dnm.getDatanodeStatefulset(hc)
+		err := dnm.setControl.CreateStatefulSet(hc, set)
+		if err != nil {
+			glog.Errorf("sync data node statefulset, err=%+v", err)
+			return err
+		}
+	} else {
+		glog.Errorf("get data node statefulset error, err=%+v", err)
+		return err
+	}
+	newSet := dnm.getDatanodeStatefulset(hc)
+	if *oldSet.Spec.Replicas < hc.Spec.DataNode.Replicas {
+		err := dnm.namenodeScaler.ScaleOut(hc, oldSet, newSet)
+		if err != nil {
+			glog.Errorf("scale out data node error, err=%+v", err)
+			return err
+		}
+	}
+	_, err = dnm.setControl.UpdateStatefulSet(hc, newSet)
 	if err != nil {
-		glog.Errorf("sync data node statefulset, err=%+v", err)
+		glog.Errorf("update statefulset failed, err=%+v", err)
 		return err
 	}
 	glog.Infof("sync data node statefulset success")
@@ -80,14 +104,14 @@ func (dnm *dataNodeManager) getDatanodeHeadlessService(hc *v1alpha1.HdfsCluster)
 			OwnerReferences: []metav1.OwnerReference{controller.GetOwnerRef(hc)},
 		},
 		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeNodePort,
 			Ports: []corev1.ServicePort{
 				{
 					Port:     80,
 					Protocol: corev1.ProtocolTCP,
 				},
 			},
-			Selector: controller.DataNodeLabel(),
+			ClusterIP: "None",
+			Selector:  controller.DataNodeLabel(),
 		},
 	}
 }
@@ -111,9 +135,15 @@ func (dnm *dataNodeManager) getDatanodeStatefulset(hc *v1alpha1.HdfsCluster) *ap
 			OwnerReferences: []metav1.OwnerReference{controller.GetOwnerRef(hc)},
 		},
 		Spec: appsv1.StatefulSetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: controller.DataNodeLabel(),
+			},
 			Replicas:    &replicas,
 			ServiceName: svcName,
 			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: controller.DataNodeLabel(),
+				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
@@ -123,7 +153,7 @@ func (dnm *dataNodeManager) getDatanodeStatefulset(hc *v1alpha1.HdfsCluster) *ap
 							Env: []corev1.EnvVar{
 								{
 									Name:  "CORE_CONF_fs_defaultFS",
-									Value: fmt.Sprintf("http://%s:8020", namenodeSvc),
+									Value: fmt.Sprintf("hdfs://%s:8020", namenodeSvc),
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{

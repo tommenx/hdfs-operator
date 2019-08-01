@@ -6,7 +6,7 @@ import (
 )
 
 type Scaler interface {
-	ScaleOut(cluster v1alpha1.HdfsCluster, oldSet *apps.StatefulSet, newSet *apps.StatefulSet) error
+	ScaleOut(cluster *v1alpha1.HdfsCluster, oldSet *apps.StatefulSet, newSet *apps.StatefulSet) error
 }
 
 func increaseReplicas(newSet *apps.StatefulSet, oldSet *apps.StatefulSet) {
