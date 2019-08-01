@@ -1,11 +1,13 @@
 package hdfscluster
 
 import (
+	"github.com/golang/glog"
 	"github.com/tommenx/hdfs-operator/pkg/client/clientset/versioned"
 	informers "github.com/tommenx/hdfs-operator/pkg/client/informers/externalversions"
 	listers "github.com/tommenx/hdfs-operator/pkg/client/listers/storage.io/v1alpha1"
 	"github.com/tommenx/hdfs-operator/pkg/controller"
 	"github.com/tommenx/hdfs-operator/pkg/manager"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	applisters "k8s.io/client-go/listers/apps/v1"
@@ -22,6 +24,23 @@ type Controller struct {
 	setListerSynced cache.InformerSynced
 	queue           workqueue.RateLimitingInterface
 	control         ControlInterface
+}
+
+type HdfsController struct {
+	cli versioned.Interface
+}
+
+func NewHdfsController(cli versioned.Interface) *HdfsController {
+	return &HdfsController{cli: cli}
+}
+
+func (h *HdfsController) Get() {
+	hdfs, err := h.cli.Storage().HdfsClusters("default").Get("demo", metav1.GetOptions{})
+	if err != nil {
+		glog.Errorf("get hdfs cluster error")
+		return
+	}
+	glog.Errorf("hdfs is %+v", *hdfs)
 }
 
 func NewController(

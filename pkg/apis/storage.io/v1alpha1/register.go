@@ -37,7 +37,7 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	Scheme = scheme
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&HdfsCluster{},
-		&HdfsClusterlList{},
+		&HdfsClusterList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)

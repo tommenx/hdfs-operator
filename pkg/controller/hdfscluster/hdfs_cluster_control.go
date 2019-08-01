@@ -56,4 +56,5 @@ func (c *hdfsClusterControl) isNameNodeAvailable() bool {
 	if !ok {
 		return false
 	}
+	return true
 }
