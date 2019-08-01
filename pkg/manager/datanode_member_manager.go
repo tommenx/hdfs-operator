@@ -75,6 +75,9 @@ func (dnm *dataNodeManager) SyncDatanodeStatefulSet(hc *v1alpha1.HdfsCluster) er
 		glog.Errorf("get data node statefulset error, err=%+v", err)
 		return err
 	}
+	if oldSet == nil {
+		return nil
+	}
 	newSet := dnm.getDatanodeStatefulset(hc)
 	if *oldSet.Spec.Replicas < hc.Spec.DataNode.Replicas {
 		err := dnm.namenodeScaler.ScaleOut(hc, oldSet, newSet)
